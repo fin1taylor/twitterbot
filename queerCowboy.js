@@ -35,6 +35,21 @@ function getQuote() {
 	return "https://api.quotable.io/random?tags=self%7Ccharacter%7Chappiness%7Cinspirational%7Clove";
 }
 
+function getGif() {
+	return "https://cataas.com/cat/gif?html=true";
+}
+
+// turn long string of quote info into map of with just author and content
+function cleanQuote(data) {
+	console.log(data);
+	var pairs = data.split("\"");
+	var cquote = [];
+	cquote[pairs[5]] = pairs[7];
+	cquote[pairs[9]] = pairs[11];
+	console.log(cquote);
+	return cquote
+}
+
 // Post a status update
 function tweet(message) {
 
@@ -42,6 +57,21 @@ function tweet(message) {
 		console.log('Debug mode: ', message);
 	else
 		T.post('statuses/update', {status: message }, function (err, reply) {
+			if (err != null){
+				console.log('Error: ', err);
+			}
+			else {
+				console.log('Tweeted: ', message);
+			}
+		});
+}
+
+function tweetImage(message, image) {
+
+	if(debug) 
+		console.log('Debug mode: ', message);
+	else
+		T.post('statuses/update', {status: message, media_id: image}, function (err, reply) {
 			if (err != null){
 				console.log('Error: ', err);
 			}
@@ -109,35 +139,21 @@ function runBot() {
 
 	request(getQuote(), function(err, response, data) {
 		if (err != null) return; // bail if no data
+		var quote = cleanQuote(data);
+
+		//tweet("Today's Daily quote:\n\"" + quote.content + "\" - " + quote.author); // tweeting out a random quote
+	});
+
+	request(getGif(), function(err, response, data) {
+		if (err != null) return; // bail if no data
+
 		console.log(data);
-		var pairs = data.split("\"");
-		var quote = [];
-		quote[pairs[5]] = pairs[7];
-		quote[pairs[9]] = pairs[11];
-		console.log(quote);
-
-		tweet("\"" + quote.content + "\" - " + quote.author); // tweeting out a random quote
-
-
-		// var rand = Math.random();
-
- 		// if(rand <= 1.60) {      
-		// 	console.log("-------Tweet something");
-		// 	tweet(quote.content + " -" + quote.author);
-			
-		// } else if (rand <= 0.80) {
-		// 	console.log("-------Tweet something @someone");
-		// 	respondToMention();
-			
-		// } else {
-		// 	console.log("-------Follow someone who @-mentioned us");
-		// 	followAMentioner();
-		// }
+		tweetImage("test2", "/cat/fd5LzhKOnctOyhmK"); // tweeting out a random cat gif
 	});
 }
 
 // Run the bot
 runBot();
 
-// And recycle every hour
-setInterval(runBot, 1000 * 60 * 60);
+// And recycle every 15 minutes
+setInterval(runBot, 1000 * 60 * 15);
