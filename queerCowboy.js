@@ -1,6 +1,6 @@
 
 // DEBUG
-var debug = true;		// if we don't want it to post to Twitter! Useful for debugging!
+var debug = false;		// if we don't want it to post to Twitter! Useful for debugging!
 
 // Twitter Essentials
 // Twitter Library
@@ -36,20 +36,17 @@ function getQuote() {
 }
 
 // Post a status update
-function tweet() {
-
-	con.setRequestMethod("GET");	
-	// var tweetText = pre.pick();
+function tweet(message) {
 
 	if(debug) 
-		console.log('Debug mode: ', tweetText);
+		console.log('Debug mode: ', message);
 	else
-		T.post('statuses/update', {status: tweetText }, function (err, reply) {
+		T.post('statuses/update', {status: message }, function (err, reply) {
 			if (err != null){
 				console.log('Error: ', err);
 			}
 			else {
-				console.log('Tweeted: ', tweetText);
+				console.log('Tweeted: ', message);
 			}
 		});
 }
@@ -119,21 +116,23 @@ function runBot() {
 		quote[pairs[9]] = pairs[11];
 		console.log(quote);
 
-		//----- NOW DO THE BOT STUFF
-		var rand = Math.random();
+		tweet("\"" + quote.content + "\" - " + quote.author); // tweeting out a random quote
 
- 		if(rand <= 1.60) {      
-			console.log("-------Tweet something");
-			tweet();
+
+		// var rand = Math.random();
+
+ 		// if(rand <= 1.60) {      
+		// 	console.log("-------Tweet something");
+		// 	tweet(quote.content + " -" + quote.author);
 			
-		} else if (rand <= 0.80) {
-			console.log("-------Tweet something @someone");
-			respondToMention();
+		// } else if (rand <= 0.80) {
+		// 	console.log("-------Tweet something @someone");
+		// 	respondToMention();
 			
-		} else {
-			console.log("-------Follow someone who @-mentioned us");
-			followAMentioner();
-		}
+		// } else {
+		// 	console.log("-------Follow someone who @-mentioned us");
+		// 	followAMentioner();
+		// }
 	});
 }
 
