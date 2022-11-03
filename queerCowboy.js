@@ -113,30 +113,27 @@ function runBot() {
 	request(getQuote(), function(err, response, data) {
 		if (err != null) return; // bail if no data
 		console.log(data);
+		var pairs = data.split("\"");
 		var quote = [];
-		var pairs = data.split(",");
-		for (var i = 1; i < pairs.length; i++) {
-			var pair = pairs[i];
-			var keyValue = pair.split(":");
-			quote[keyValue[0].replaceAll("\"", "")] = keyValue[1].replaceAll("\"", "");
-			console.log(keyValue[0].replaceAll("\"", ""), keyValue[1].replaceAll("\"", ""))
-		}
-		
-		///----- NOW DO THE BOT STUFF
-		// var rand = Math.random();
+		quote[pairs[5]] = pairs[7];
+		quote[pairs[9]] = pairs[11];
+		console.log(quote);
 
- 		// if(rand <= 1.60) {      
-		// 	console.log("-------Tweet something");
-		// 	tweet();
+		//----- NOW DO THE BOT STUFF
+		var rand = Math.random();
+
+ 		if(rand <= 1.60) {      
+			console.log("-------Tweet something");
+			tweet();
 			
-		// } else if (rand <= 0.80) {
-		// 	console.log("-------Tweet something @someone");
-		// 	respondToMention();
+		} else if (rand <= 0.80) {
+			console.log("-------Tweet something @someone");
+			respondToMention();
 			
-		// } else {
-		// 	console.log("-------Follow someone who @-mentioned us");
-		// 	followAMentioner();
-		// }
+		} else {
+			console.log("-------Follow someone who @-mentioned us");
+			followAMentioner();
+		}
 	});
 }
 
