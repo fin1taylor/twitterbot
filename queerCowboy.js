@@ -15,6 +15,8 @@ var T = new Twit(require('./config.js'));
 
 var replies = [];
 
+var time = 0
+
 // Helper function for arrays, picks a random thing
 Array.prototype.pick = function() {
 	return this[Math.floor(Math.random()*this.length)];
@@ -45,28 +47,6 @@ function getQuote() {
 
 function getGif() {
 	return "https://cataas.com/cat";
-}
-
-function isTime() {
-	var startTimeStr = "09:00:00";
-	var startTime = new SimpleDateFormat("HH:mm:ss").parse(startTimeStr);
-	var calendar1 = Calendar.getInstance();
-	calendar1.setTime(startTime);
-	calendar1.add(Calendar.DATE, 1);
-	var endTimeStr = "09:15:00";
-	var endTime = new SimpleDateFormat("HH:mm:ss").parse(endTimeStr);
-	var calendar2 = Calendar.getInstance();
-	calendar2.setTime(endTime);
-	calendar2.add(Calendar.DATE, 1);
-	var currentTimeStr = d.toLocaleTimeString();
-	var currentTime = new SimpleDateFormat("HH:mm:ss").parse(currentTimeStr);
-	var calendar3 = Calendar.getInstance();
-	calendar3.setTime(currentTime);
-	calendar3.add(Calendar.DATE, 1);
-
-	var x = calendar3.getTime();
-
-	return x.after(calendar1.getTime()) && x.before(calendar2.getTime());
 }
 
 // turn long string of quote info into map of with just author and content
@@ -316,15 +296,18 @@ function runBot() {
 	console.log(ds);  // date/time of the request	
 
 	//Daily tweet with just quote
-	if (isTime()) {
+	if (time == 0) {
 		request(getQuote(), function(err, response, data) {
 			if (err != null) return; // bail if no data
 			var quote = cleanQuote(data);
 	
-			tweet("Today's Daily quote:\n\"" + quote.content + "\" - " + quote.author); // tweeting out a random quote
+			tweet("The hourly quote:\n\"" + quote.content + "\" - " + quote.author); // tweeting out a random quote
 		});
 	}
-	
+	time++;
+	if (time == 4) {
+		time = 0;
+	}
 
 	//Tweet with quote and cute photo
 	request(getQuote(), function(err, response, data) {
