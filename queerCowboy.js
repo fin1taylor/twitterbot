@@ -1,4 +1,3 @@
-
 // DEBUG
 var debug = false;		// if we don't want it to post to Twitter! Useful for debugging!
 
@@ -289,25 +288,30 @@ function respondtoHashtag() {
 	  });
 }
 
+function isTime() {
+	var d = new Date(); // retrieve current date, depends on the time zone set on the user's computer
+	var hour = d.getHours(); 
+	var minutes = d.getMinutes();
+
+	return ((hour - 9 == 0) && ((minutes >= 0) || (minutes <= 15))); // returns true if the current time is between 9:00am - 9:15am
+}
+
 function runBot() {
 	console.log(" "); // just for legible logs
 	var d=new Date();
 	var ds = d.toLocaleDateString() + " " + d.toLocaleTimeString();
 	console.log(ds);  // date/time of the request	
 
-	//Daily tweet with just quote
-	if (time == 0) {
+	// Daily tweet with just quote
+	if (isTime()) { //  will post the daily tweet between 9:00:00AM - 9:15:00AM Eastern Time
 		request(getQuote(), function(err, response, data) {
 			if (err != null) return; // bail if no data
 			var quote = cleanQuote(data);
 	
-			tweet("The hourly quote:\n\"" + quote.content + "\" - " + quote.author); // tweeting out a random quote
+			tweet("Today's Daily Quote:\n\"" + quote.content + "\" - " + quote.author); // tweeting out a random quote
 		});
 	}
-	time++;
-	if (time == 4) {
-		time = 0;
-	}
+	
 
 	//Tweet with quote and cute photo
 	request(getQuote(), function(err, response, data) {
@@ -327,7 +331,7 @@ function runBot() {
 	})
 
 	//tweet just cute image to someone using #sad
-	respondtoHashtag()
+	respondtoHashtag();
 }
 
 // Run the bot
