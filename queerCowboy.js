@@ -8,6 +8,7 @@ var Twit = require('twit');
 
 const fs = require('fs')
 const request = require('request')
+const path = require('path');
 
 // Include configuration file
 var T = new Twit(require('./config.js'));
@@ -43,7 +44,7 @@ function getQuote() {
 }
 
 function getGif() {
-	return "https://cataas.com/cat/gif";
+	return "https://cataas.com/cat";
 }
 
 // turn long string of quote info into map of with just author and content
@@ -57,61 +58,6 @@ function cleanQuote(data) {
 	return cquote
 }
 
-// media upload methods
-
-const initMediaUpload = (pathToFile) => {
-    const mediaType = "image/gif";
-    const mediaSize = fs.statSync(pathToFile).size
-    return new Promise((resolve, reject) => {
-        T.post("media/upload", {
-            command: "INIT",
-            total_bytes: mediaSize,
-            media_type: mediaType
-        }, (error, data, response) => {
-            if (error) {
-                console.log(error)
-                reject(error)
-            } else {
-                resolve(data.media_id_string)
-            }
-        })
-    })
-}
-
-const appendMedia = (mediaId, pathToFile) => {
-    const mediaData = fs.readFileSync(pathToFile)
-    return new Promise((resolve, reject) => {
-        T.post("media/upload", {
-            command: "APPEND",
-            media_id: mediaId,
-            media: mediaData,
-            segment_index: 0
-        }, (error, data, response) => {
-            if (error) {
-                console.log(error)
-                reject(error)
-            } else {
-                resolve(mediaId)
-            }
-        })
-    })
-}
-
-const finalizeMediaUpload = (mediaId) => {
-    return new Promise((resolve, reject) =>  {
-        T.post("media/upload", {
-            command: "FINALIZE",
-            media_id: mediaId
-        }, (error, data, response) => {
-            if (error) {
-                console.log(error)
-                reject(error)
-            } else {
-                resolve(mediaId)
-            }
-        })
-    })
-}
 
 // Post a status update
 function tweet(message) {
@@ -130,24 +76,29 @@ function tweet(message) {
 }
 
 function tweetImage(message) {
-	//request(getGif()).pipe(fs.createWriteStream('cat.gif'));
+	request(getGif()).pipe(fs.createWriteStream('cat.png'));
 
 	if(debug) 
 		console.log('Debug mode: ', message);
-	else
-		initMediaUpload("cat.gif")
-			.then((mediaId) => appendMedia(mediaId, "cat.gif"))
-			.then((mediaId) => finalizeMediaUpload(mediaId))
-			.then((mediaId) => {
-				T.post('statuses/update', {status: message, media_id: mediaId}, function (err, reply) {
-					if (err != null){
-						console.log('Error: ', err);
-					}
-					else {
-						console.log('Tweeted: ', message);
-					}
-				});
-			});
+	else {
+		var mediaFile = fs.readFileSync(path.join(__dirname, 'cat.png'));
+		var base64image = Buffer.from(mediaFile).toString('base64');
+		
+		T.post('media/upload', { media_data: base64image, media_type: "image/png" })
+			.then(media => {
+		
+			console.log('You successfully uploaded media');
+			media = JSON.parse(media);
+			var media_id = media.media_id_string;
+			T.post('statuses/update', { status: 'Image Test!', media_ids: media_id })
+				.then(tweet => {
+		
+				console.log('Your image tweet is posted successfully');
+			}).catch(console.error);
+		
+		}).catch(console.error);
+	}
+	
 }
 
 function respondToMention(message) {
@@ -207,15 +158,18 @@ function runBot() {
 	var ds = d.toLocaleDateString() + " " + d.toLocaleTimeString();
 	console.log(ds);  // date/time of the request	
 
-	//Tweet with just quote
-	request(getQuote(), function(err, response, data) {
-		if (err != null) return; // bail if no data
-		var quote = cleanQuote(data);
+	//Daily tweet with just quote
+	if (false) {
+		request(getQuote(), function(err, response, data) {
+			if (err != null) return; // bail if no data
+			var quote = cleanQuote(data);
+	
+			//tweet("Today's Daily quote:\n\"" + quote.content + "\" - " + quote.author); // tweeting out a random quote
+		});
+	}
+	
 
-		//tweet("Today's Daily quote:\n\"" + quote.content + "\" - " + quote.author); // tweeting out a random quote
-	});
-
-	//Tweet with quote and cute gif
+	//Tweet with quote and cute photo
 	request(getQuote(), function(err, response, data) {
 		if (err != null) return; // bail if no data
 		var quote = cleanQuote(data);
@@ -223,7 +177,7 @@ function runBot() {
 		tweetImage("Today's Daily quote:\n\"" + quote.content + "\" - " + quote.author); // sending in random quote
 	});
 
-	request(getGif()).pipe(fs.createWriteStream('cat.gif'))
+	request(getGif()).pipe(fs.createWriteStream('cat.png'))
 
 	//Tweet reply to mention
 	request(getQuote(), function(err, response, data) {
